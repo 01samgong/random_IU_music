@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>오늘의 노래 추천</title>
+    <style>
+              body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            position: relative; /* 우측 상단 버튼 배치를 위한 기준점 */
+        }
+        
+                /* 💡 추가된 스타일: 우측 상단 SNS 버튼 모음 바구니 */
+        .sns-group {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column; /* 세로로 나란히 정렬 */
+            gap: 8px; /* 버튼 사이의 간격 */
+            align-items: flex-end; /* 오른쪽 끝 정렬 */
+        }
+        
+        /* SNS 버튼 공통 스타일 */
+        .btn-sns {
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 70px; /* 모든 버튼의 가로 길이를 통일해서 깔끔하게 마감 */
+            justify-content: center;
+        }
+        .btn-sns:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 각 SNS 채널별 고유 색상 */
+        .youtube { background-color: #ff0000; }
+        .youtube:hover { background-color: #cc0000; }
+        
+        .instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .instagram:hover { opacity: 0.9; }
+        
+        .twitter { background-color: #000000; } /* 트위터/X 블랙 */
+        .twitter:hover { background-color: #222222; }
+
+        .card {
+            background: white;
+            /* 💡 padding의 네 번째 값들을 조절하여 아래쪽 여백을 늘렸습니다. */
+            /* 상(35px) 우(35px) 하(65px) 좌(35px) 여백으로 요소들을 위로 올리는 효과를 줍니다. */
+            padding: 35px 35px 65px 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: center;
+            width: 320px;
+            height: 520px;
+        }
+        .today-date { color: #888; font-size: 14px; font-weight: bold; }
+        
+        .album-art {
+            width: 220px;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .title { color: #333; margin: 10px 0 5px 0; font-size: 26px; font-weight: bold; }
+        .artist { color: #777; margin-bottom: 25px; font-size: 16px; }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 💡 버튼들이 가로로 늘어나지 않고 자기 크기를 갖도록 변경 */
+            gap: 12px;
+        }
+        
+        /* 공통 버튼 스타일 */
+        .btn {
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+        }
+        
+        /* 🎬 뮤직비디오 보기 버튼 (기본 크기 유지) */
+        .btn-main {
+            background-color: #a18cd1;
+            color: white;
+            padding: 12px 35px;
+            border-radius: 25px;
+            font-size: 16px;
+            width: 180px; /* 터치하기 편하게 고정 너비 지정 */
+        }
+        .btn-main:hover {
+            background-color: #fbc2eb;
+            color: #333;
+        }
+        
+        /* 💡 🎲 다른 노래 추천받기 버튼 (크기 대폭 축소) */
+        .btn-refresh {
+            background-color: #f3f3f3;
+            color: #666;
+            padding: 6px 14px;     /* 위아래 6px, 좌우 14px로 여백을 확 줄였어요 */
+            border-radius: 15px;   /* 작아진 크기에 맞춰 모서리 둥글기 조정 */
+            font-size: 12px;       /* 글씨 크기를 14px -> 12px로 축소 */
+            font-weight: normal;   /* 글씨 두께를 가볍게 */
+        }
+        .btn-refresh:hover {
+            background-color: #ddd;
+            color: #111;
+        }
+    </style>
+</head>
+<body>
+
+        <!-- 💡 우측 상단 SNS 바로가기 묶음 박스 추가 -->
+    <div class="sns-group">
+        <a href="https://www.youtube.com/channel/UC3SyT4_WLHzN7JmHQwKQZww" target="_blank" class="btn-sns youtube">
+            YouTube
+        </a>
+        <a href="https://www.instagram.com/dlwlrma/" target="_blank" class="btn-sns instagram">
+            Instagram
+        </a>
+        <a href="https://x.com/_IUofficial" target="_blank" class="btn-sns twitter">
+            X(twitter)
+        </a>
+    </div>
+
+
+    <div class="card">
+        <p class="today-date" id="current-date">날짜 로딩 중...</p>
+        <h2>오늘의 추천 곡 ♫</h2>
+        <hr style="border: 0; height: 1px; background: #eee;">
+        
+        <img class="album-art" id="album-img" src="" alt="아이유 앨범 커버">
+        <h1 class="title" id="song-title">노래 제목</h1>
+        <p class="artist" id="song-artist">가수 이름</p>
+        
+        <div class="btn-group">
+            <!-- 메인 버튼과 서브 버튼의 클래스명을 나누어 정리했습니다 -->
+            <a href="" target="_blank" class="btn btn-main" id="music-link">🎬 뮤직비디오 보기</a>
+            <button class="btn btn-refresh" onclick="pickRandomSong()">🎲 다른 노래 추천받기</button>
+        </div>
+    </div>
+
+    <script>
+        // 각 노래 데이터에 실제 유튜브 고유 영상 주소(url)를 매칭했습니다.
+        const iuSongs = [
+            { title: "이 별로부터", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41547/4154773.jpg", url: "https://www.youtube.com/watch?v=nP1xjFX86Po" },
+            { title: "Dear my crazy soulmate", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41547/4154773.jpg", url: "https://www.youtube.com/watch?v=RdUV9Ms5GM4" },
+            { title: "바이, 썸머", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41276/4127630.jpg", url: "https://www.youtube.com/watch?v=Hsuy_xzPyWQ&vl=ko" },
+            { title: "빨간 운동화", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41204/4120415.jpg", url: "https://www.youtube.com/watch?v=CY9NrL3Szvg" },
+            { title: "Nevre Ending Story", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41204/4120415.jpg", url: "https://www.youtube.com/watch?v=6J9ixwhDYSM" },
+            { title: "10월 4일", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41204/4120415.jpg", url: "https://www.youtube.com/watch?v=ULhVF6UeRtA" },
+            { title: "Last Scene", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41204/4120415.jpg", url: "https://www.youtube.com/watch?v=Ah6V8_bFIjU" },
+            { title: "미인", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41204/4120415.jpg", url: "https://www.youtube.com/watch?v=l5Z1PBJLUss" },
+            { title: "네모의 꿈", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41204/4120415.jpg", url: "https://www.youtube.com/watch?v=r3WS1BOpgk4" },
+            { title: "밤 산책", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/41166/4116604.jpg", url: "https://www.youtube.com/watch?v=nFOws0FC6TY" },
+            { title: "Shopper", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40955/4095501.jpg", url: "https://www.youtube.com/watch?v=kHW-UVXOcLU" },
+            { title: "홀씨", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40955/4095501.jpg", url: "https://www.youtube.com/watch?v=mFbILexYSQg" },
+            { title: "Shh..", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40955/4095501.jpg", url: "https://www.youtube.com/watch?v=VIDQTyNmkN4" },
+            { title: "Love wins all", artist: "아이유(IU)", img: "https://i.namu.wiki/i/3tZAlvVSSiXFk_hj5s6UD_qLfMS7MMBwM8o93FumB2nojn-6mm25Ovoihnj48IzYI3bSZY_EWKA_jB0foDThVQ.webp", url: "https://www.youtube.com/watch?v=JleoAppaxi0" },
+            { title: "관객이 될게 (I stan U)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40955/4095501.jpg", url: "https://www.youtube.com/watch?v=O-1FpjPP6_c" },
+            { title: "Mother Natuer (H₂O)", artist: "아이유(IU), 강승원", img: "https://image.bugsm.co.kr/album/images/1200/40706/4070675.jpg", url: "https://www.youtube.com/watch?v=cB1dGK8DCtw&vl=ko" },
+            { title: "드라마", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40695/4069567.jpg", url: "https://www.youtube.com/watch?v=AkugjXUj5sM" },
+            { title: "정거장", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40695/4069567.jpg", url: "https://www.youtube.com/watch?v=3nDzKulmSpg" },
+            { title: "겨울잠", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40695/4069567.jpg", url: "https://www.youtube.com/watch?v=SmQhRHS9-YA" },
+            { title: "너", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40695/4069567.jpg", url: "https://www.youtube.com/watch?v=HP4kVAiQLEw" },
+            { title: "러브레터", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40695/4069567.jpg", url: "https://www.youtube.com/watch?v=4x7BrWTUmZo" },
+            { title: "strawberry moon", artist: "아이유(IU)", img: "https://i.namu.wiki/i/NsCdu_f9aDK1F7n0fj9PqjL_btETOAleYo6n6eRQbWgihYH1PdSwlsbsypEqIxlbbnCH-0pb52C1XcaGehndlQ.jpg", url: "https://www.youtube.com/watch?v=sqgxcCjD04s" },
+            { title: "첫 겨울이니까", artist: "성시경, 아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/202935/20293519.jpg", url: "https://www.youtube.com/watch?v=EERY_nmyjKk" },
+            { title: "라일락", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=v7bnOxV4jAc" },
+            { title: "Flu", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=E787kCVAeL8" },
+            { title: "Coin", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=86BST8NIpNM" },
+            { title: "봄 안녕 봄", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=PLDH-rcYd8c" },
+            { title: "Celebrity", artist: "아이유(IU)", img: "https://i.namu.wiki/i/p8XaoeIzcavxe0JHslIG7xXrRWiOGFfLIia3xRde6ukxJKn8g16N-KwPCssszNRCOU1mkv9Yu5n5Yu2nbnC20A.webp", url: "https://www.youtube.com/watch?v=0-q1KafFCLU" },
+            { title: "돌림노래", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=hiUPJaHjuUk" },
+            { title: "빈 컵 (Empty Cup)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=2sQznc9CQxg" },
+            { title: "아이와 나의 바다", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=nn1pbxe8bAI" },
+            { title: "어푸 (Ah Puh)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=7n9D8ZeOQv0" },
+            { title: "에필로그", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/40271/4027185.jpg", url: "https://www.youtube.com/watch?v=c9E2IT1jHQY" },
+            { title: "Into the I-LAND", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/203326/20332692.jpg", url: "https://www.youtube.com/watch?v=LKAb8oUlkLQ" },
+            { title: "에잇", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/203228/20322838.jpg", url: "https://www.youtube.com/watch?v=TgOu00Mf3kI" },
+            { title: "마음을 드려요", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/203063/20306376.jpg", url: "https://www.youtube.com/watch?v=euI-C1YONaU" },
+            { title: "unlucky", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/202860/20286013.jpg", url: "https://www.youtube.com/watch?v=l5Rb1pNre40" },
+            { title: "그 사람", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/202860/20286013.jpg", url: "https://www.youtube.com/watch?v=y5YmTj8KDWM" },
+            { title: "Blueming", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/202860/20286013.jpg", url: "https://www.youtube.com/watch?v=D1PvIWdJ8xoe" },
+            { title: "시간의 바깥", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/202860/20286013.jpg", url: "https://www.youtube.com/watch?v=R3Fwdnij49o" },
+            { title: "자장가", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/202860/20286013.jpg", url: "https://www.youtube.com/watch?v=aepREwo5Lio" },
+            { title: "Love Poem", artist: "아이유(IU)", img: "https://i.namu.wiki/i/eAkKRORr_r3oasfUsIEyS_wK_nI5wJ0zloHE4MWiF29ZVthTIPc5p-XluRZuA8vPq9JnYVEHJ36MA7ED3W4SDg.webp", url: "https://www.youtube.com/watch?v=OcVmaIlHZ1o" },
+            { title: "삐삐", artist: "아이유(IU)", img: "https://i.namu.wiki/i/SSu1k6-oBzwu1jvc_e44EuO2KK32tTd4ERWQi-JyjUCAdGBey_OeyryLbvnFBL9TDVOpwMX45xU1etRXCDli8w.webp", url: "https://www.youtube.com/watch?v=nM0xDI5R50E" },
+            { title: "가을 아침", artist: "아이유(IU)", img: "https://i.namu.wiki/i/-vt-64ZLGeee2v05f_nXRTMwtPKoBbT08alT2PQcKFMgPHKTI3sSD0KflpjSjzFhNOl9Pbjxf-HwnGwhrqtdVA.webp", url: "https://www.youtube.com/watch?v=ZDoH5dQ58pse" },
+            { title: "비밀의 화원", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/201196/20119646.jpg", url: "https://www.youtube.com/watch?v=eGXJs7zOHC4" },
+            { title: "잠 못 드는 밤 비는 내리고", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/201196/20119646.jpg", url: "https://www.youtube.com/watch?v=m7mvpe1fVa4" },
+            { title: "어젯밤 이야기", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/201196/20119646.jpg", url: "https://www.youtube.com/watch?v=cxcxskPKtiI" },
+            { title: "개여울", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/201196/20119646.jpg", url: "https://www.youtube.com/watch?v=zFcvAO5eZwE" },
+            { title: "매일 그대와", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/201196/20119646.jpg", url: "https://www.youtube.com/watch?v=N_E6Jnt4zss" },
+            { title: "이 지금", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200941/20094140.jpg", url: "https://www.youtube.com/watch?v=RUuRcR7ZQUg" },
+            { title: "팔레트", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200941/20094140.jpg", url: "https://www.youtube.com/watch?v=d9IxdwEFk1ce" },
+            { title: "이런 엔딩", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200941/20094140.jpg", url: "https://www.youtube.com/watch?v=Rh5ok0ljrzA" },
+            { title: "잼잼", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200941/20094140.jpg", url: "https://www.youtube.com/watch?v=KWjDSRdIFgc" },
+            { title: "Black Out", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200941/20094140.jpg", url: "https://www.youtube.com/watch?v=77rsl3WZaBI" },
+            { title: "마침표", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200941/20094140.jpg", url: "https://www.youtube.com/watch?v=amNkr9bOxaE" },
+            { title: "그렇게 사랑은", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200941/20094140.jpg", url: "https://www.youtube.com/watch?v=ph1n5HCT7vU" },
+            { title: "이름에게", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200941/20094140.jpg", url: "https://www.youtube.com/watch?v=8zsYZFvKniw" },
+            { title: "사랑이 잘", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/200915/20091571.jpg", url: "https://www.youtube.com/watch?v=8H1D7XUPNFI" },
+            { title: "밤편지", artist: "아이유(IU)", img: "https://i.namu.wiki/i/2JYghtDj961GbLtrzxTiFtOwXb6VwkG6VQS_S3VYWr2XFu1NHnOVYufbfmGKFXf5Pgw5N-GquTAHqMeX3Q_gyg.webp",url: "https://www.youtube.com/watch?v=BzYnNdJhZQwe" },
+            { title: "새 신발", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/5370/537084.jpg", url: "https://www.youtube.com/watch?v=6hdlWxoRCxA" },
+            { title: "Zeze", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/5370/537084.jpg", url: "https://www.youtube.com/watch?v=zfRs5hJuh98" },
+            { title: "스물셋", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/5370/537084.jpg", url: "https://www.youtube.com/watch?v=42Gtm4-Ax2U" },
+            { title: "푸르던", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/5370/537084.jpg", url: "https://www.youtube.com/watch?v=TRTquokWSCw" },
+            { title: "Red Queen", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/5370/537084.jpg", url: "https://www.youtube.com/watch?v=3ZtUl06trDc" },
+            { title: "무릎", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/5370/537084.jpg", url: "https://www.youtube.com/watch?v=L1JUfCyeT5E" },
+            { title: "안경", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/5370/537084.jpg", url: "https://www.youtube.com/watch?v=o598G9ht748" },
+            { title: "마음", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/5038/503897.jpg", url: "https://www.youtube.com/watch?v=he2C4lx63M0" },
+            { title: "소격동", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4548/454850.jpg", url: "https://www.youtube.com/watch?v=GHu39FEFIks" },
+            { title: "애타는 마음", artist: "울랄라세션, 아이유(IU)", img: "https://i.namu.wiki/i/qb0Ea9sITLCAKE8NtZ9W_QIVvnlHSOsLf5FgCvzUjQPmCrDktqLuSdPsFZG8H874NfHHm___uBB3c6Vku8IG3A.webp", url: "https://www.youtube.com/watch?v=BJB7LXwF0MU" },
+            { title: "나의 옛날이야기", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4303/430333.jpg", url: "https://www.youtube.com/watch?v=npttud7NkL0" },
+            { title: "꽃", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4303/430333.jpg", url: "https://www.youtube.com/watch?v=WjYcpJKJ6MA" },
+            { title: "삐에로는 우릴 보고 웃지", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4303/430333.jpg", url: "https://www.youtube.com/watch?v=idcu7iLQAIw" },
+            { title: "사랑이 지나가면", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4303/430333.jpg", url: "https://www.youtube.com/watch?v=cu6tkhDcNBY" },
+            { title: "너의 의미", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4303/430333.jpg", url: "https://www.youtube.com/watch?v=LajvR3lH1cg" },
+            { title: "여름밤의 꿈", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4303/430333.jpg", url: "https://www.youtube.com/watch?v=vUOXl5bgK7I" },
+            { title: "꿍따리 샤바라", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4303/430333.jpg", url: "https://www.youtube.com/watch?v=ZRLmAc3VNa4" },
+            { title: "봄 사랑 벚꽃 말고", artist: "아이유(IU)", img: "https://i.namu.wiki/i/5goR_fxSG-R1dhrTCIjZthQKa9ssgN8TJajzt1Ulueqq7e_vxP4OQ9RdISQby9QinWwZxrpRpHk4ELwkSKP0qg.webp", url: "https://www.youtube.com/watch?v=ouR4nn1G9r4" },
+            { title: "금요일에 만나요", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=EiVmQZwJhsA" },
+            { title: "크레파스", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=XNtUcZbYsew" },
+            { title: "을의 연애", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=3YRjLmURCyc" },
+            { title: "누구나 비밀은 있다", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=lD5STtoEGG4" },
+            { title: "입술 사이 (50cm)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=QSyvqMRZhAY" },
+            { title: "분홍신", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=Q0xvVgKJxfs" },
+            { title: "Modern Times", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=GdNbfXqcOJ8" },
+            { title: "싫은 날", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=Tqudgg0aBAI" },
+            { title: "Obliviate", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=jxyVnTjUDTQ" },
+            { title: "아이야 나랑 걷자", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=tYkOXrKViDk" },
+            { title: "Havana", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=3mk-DIcvVGU" },
+            { title: "우울시계", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=uZf9Q_SOzvY" },
+            { title: "한낮의 꿈", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=GaR7hwuBgeA" },
+            { title: "기다려", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=1i9ZhJJufiM" },
+            { title: "Voice Mail (Korean Ver.)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/4036/403619.jpg", url: "https://www.youtube.com/watch?v=N_LBQV-75ig" },
+            { title: "달빛바다", artist: "아이유(IU), 피에스타", img: "https://image.bugsm.co.kr/album/images/1200/3364/336446.jpg", url: "https://www.youtube.com/watch?v=HiIjdaSlFug" },
+            { title: "복숭아", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3284/328495.jpg", url: "https://www.youtube.com/watch?v=61vK14Xd36o" },
+            { title: "하루 끝", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3284/328495.jpg", url: "https://www.youtube.com/watch?v=gJtNx3P02Z4" },
+            { title: "그 애 참 싫다", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3284/328495.jpg", url: "https://www.youtube.com/watch?v=i-hXNscPM8c" },
+            { title: "비밀", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=ZDYUgV3a3Vo" },
+            { title: "잠자는 숲 속의 왕자", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=Omiq0_Cpp6Q" },
+            { title: "별을 찾는 아이", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=yH7OyPgDYbQ" },
+            { title: "너랑 나", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=NJR8Inf77Ac" },
+            { title: "벽지무늬", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=5I85JB5uvIk" },
+            { title: "삼촌", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=tp4PZNbT75U" },
+            { title: "사랑니", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=nS0FwpbZvvg" },
+            { title: "Everything's Alright", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=uBlo4OiKeHY" },
+            { title: "Last Fantasy", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=t0lus004uoc&vl=ko" },
+            { title: "Teacher", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=3J4phJqVET8" },
+            { title: "길 잃은 강아지", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=LWS-bKcOEPM" },
+            { title: "4AM", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=nBpeJ-Nt_S8" },
+            { title: "라망 (L'amant)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/3141/314174.jpg", url: "https://www.youtube.com/watch?v=sSJz7xnKGjE" },
+            { title: "다섯째 손가락", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2177/217773.jpg", url: "https://www.youtube.com/watch?v=bIjOrbKyQzU" },
+            { title: "얼음꽃", artist: "아이유(IU), 김연아", img: "https://image.bugsm.co.kr/album/images/1200/2905/290593.jpg", url: "https://www.youtube.com/watch?v=8fCksQtuVek" },
+            { title: "내 손을 잡아", artist: "아이유(IU)", img: "https://i.namu.wiki/i/NZvc1AxQFyC0qsK5dEZid-LzaepacNSVouUmaDjdRR5KN-DwPZI7c8Uq8UuLXVeN7vKxAVYtOaNxx1bxEE4wvA.webp", url: "https://www.youtube.com/watch?v=3iM_06QeZi8" },
+            { title: "나만 몰랐던 이야기", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2647/264791.jpg", url: "https://www.youtube.com/watch?v=qGWZUtfV3IU" },
+            { title: "잔혹동화", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2647/264791.jpg", url: "https://www.youtube.com/watch?v=WCZdcx_CJnI" },
+            { title: "Someday", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2541/254169.jpg", url: "https://www.youtube.com/watch?v=Ta7AmyoSeuo" },
+            { title: "이게 아닌데", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2499/249930.jpg", url: "https://www.youtube.com/watch?v=G8vYfVcPDEU" },
+            { title: "느리게 하는 일", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2499/249930.jpg", url: "https://www.youtube.com/watch?v=S_8B6x89Uoo" },
+            { title: "좋은 날", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2499/249930.jpg", url: "https://www.youtube.com/watch?v=jeqdYqsrsA0e" },
+            { title: "첫 이별 그날 밤", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2499/249930.jpg", url: "https://www.youtube.com/watch?v=zrtwnrFefwA" },
+            { title: "혼자 있는 방", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2499/249930.jpg", url: "https://www.youtube.com/watch?v=fulbnNA0WPM" },
+            { title: "미리 메리 크리스마스", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2499/249930.jpg", url: "https://www.youtube.com/watch?v=w14rSMl35ro" },
+            { title: "사랑을 믿어요", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2448/244875.jpg", url: "https://www.youtube.com/watch?v=HJMEdHIhcqo" },
+            { title: "그대네요", artist: "성시경, 아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2393/239329.jpg", url: "https://www.youtube.com/watch?v=UczsdpAvpik" },
+            { title: "여자라서", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2325/232570.jpg", url: "https://www.youtube.com/watch?v=Dwk4vTd4bX0" },
+            { title: "잔소리", artist: "아이유(IU), 임슬옹", img: "https://image.bugsm.co.kr/album/images/1200/2249/224970.jpg", url: "https://www.youtube.com/watch?v=bzdsqPOJK_I" },
+            { title: "Rain Drop", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2249/224970.jpg", url: "https://www.youtube.com/watch?v=EQzqq0LNlto" },
+            { title: "첫사랑이죠", artist: "아이유(IU), 나윤권", img: "https://i.scdn.co/image/ab67616d0000b273dee939766dfa630f32b85756", url: "https://www.youtube.com/watch?v=C7rHwpkW2UY" },
+            { title: "Danny Boy", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2085/208503.jpg", url: "https://www.youtube.com/watch?v=yqo7Xs6gKkA" },
+            { title: "Love Attack", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2058/205841.jpg", url: "https://www.youtube.com/watch?v=sCqP0YmT5H8" },
+            { title: "기차를 타고", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2058/205841.jpg", url: "https://www.youtube.com/watch?v=auhwqjhL1nA" },
+            { title: "마쉬멜로우", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2058/205841.jpg", url: "https://www.youtube.com/watch?v=slT80EySpKk" },
+            { title: "아침 눈물", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2058/205841.jpg", url: "https://www.youtube.com/watch?v=x5JBGMawty4" },
+            { title: "두근 두근 데이트", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/2058/205841.jpg", url: "https://www.youtube.com/watch?v=WrtiVElyYLY" },
+            { title: "아라로", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1985/198581.jpg", url: "https://www.youtube.com/watch?v=ZhcxTnIZcxY" },
+            { title: "바람꽃 (E.S)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1985/198581.jpg", url: "https://www.youtube.com/watch?v=lRm-IW3Hg6E" },
+            { title: "난 사랑을 아직 몰라", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1885/188517.jpg", url: "https://www.youtube.com/watch?v=yJQ3IdENDbA" },
+            { title: "그러는 그대는", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1866/186601.jpg", url: "https://www.youtube.com/watch?v=R_WEwaobm6k" },
+            { title: "바라보기", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=MmqVRM3u6ZY" },
+            { title: "Boo", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=g3TP6XZ1Baw" },
+            { title: "가여워", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=CGDP06NC7iE" },
+            { title: "A Dreamer", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=28DTbGM5H9I" },
+            { title: "미아 (Acoustic Ver.)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=sgoNh07XcyU" },
+            { title: "나 말고 넷", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=TNhndrqnUJk" },
+            { title: "있잖아 (Rock Ver.)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=7WINyXmPRAE" },
+            { title: "졸업하는 날", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=lHdN6tR77Cw" },
+            { title: "마주보기 (바라보기 그 후)", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1824/182442.jpg", url: "https://www.youtube.com/watch?v=4EEQXFlryDM" },
+            { title: "미운오리", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1641/164123.jpg", url: "https://www.youtube.com/watch?v=AQhIcRCZczA" },
+            { title: "미아", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1641/164123.jpg", url: "https://www.youtube.com/watch?v=0ZukHxqOA0o" },
+            { title: "있잖아", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1641/164123.jpg", url: "https://www.youtube.com/watch?v=E1MtZj1p9BA" },
+            { title: "Feel So Good", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1641/164123.jpg", url: "https://www.youtube.com/watch?v=CE13MJe_gWY" },
+            { title: "Every Sweet Day", artist: "아이유(IU)", img: "https://image.bugsm.co.kr/album/images/1200/1641/164123.jpg", url: "https://www.youtube.com/watch?v=zRiQK4SmXSU" },
+            { title: "삐그덕 (F. IU)", artist: "Cruch", img: "https://i.namu.wiki/i/arpnbcxkd8jbCmL7T72jl9U85JcDLr4bDglLJ_SjXOduxaMrqD5squM2EjRFomaNdf1udCX5i-NuGSTx0Ret-Q.webp", url: "https://www.youtube.com/watch?v=bSs1gepe_cY" },
+            { title: "GANADARA (F. IU)", artist: "박재범", img: "https://img4.yna.co.kr/etc/inner/KR/2022/03/05/AKR20220305033700005_01_i_P4.jpg", url: "https://www.youtube.com/watch?v=gFb1TftvdoM" },
+            { title: "사람 Pt.2 (F. IU)", artist: "Agust D", img: "https://image.bugsm.co.kr/album/images/1200/40852/4085269.jpg", url: "https://www.youtube.com/watch?v=7GvTI65VHeo" },
+            { title: "작은 방 (F. IU)", artist: "스윗소로우(SWEET SORROW)", img: "https://image.bugsm.co.kr/album/images/1200/203567/20356794.jpg", url: "https://www.youtube.com/watch?v=5hPDLb1WW5k" },
+            { title: "낙하 (w. IU)", artist: "AKMU (악뮤)", img: "https://i.namu.wiki/i/jwCxUJMQ2v2vQGrgYs4IjvEM0ffWMc20KxxH_YBZsXQK-A4CeiFRzneIVHXDHXQqemd0dmGxDThvVGjSA-JyPg.webp", url: "https://www.youtube.com/watch?v=EtiPbWzUY9o" },
+            { title: "동화 (F. IU)", artist: "김동률", img: "https://image.bugsm.co.kr/album/images/1200/202140/20214028.jpg", url: "https://www.youtube.com/watch?v=A95GJCf16TY" },
+            { title: "SoulMate (F. IU)", artist: "지코(ZICO)", img: "https://image.bugsm.co.kr/album/images/1200/7720/772092.jpg", url: "https://www.youtube.com/watch?v=Vl1kO9hObpA" },
+            { title: "연애소설 (F. IU)", artist: "에픽하이(EPIK HIGH)", img: "https://image.bugsm.co.kr/album/images/1200/201253/20125321.jpg", url: "https://www.youtube.com/watch?v=daA1hQPMr_w" },
+            { title: "고양이 (F. IU)", artist: "선우정아", img: "https://image.bugsm.co.kr/album/images/1200/201385/20138513.jpg", url: "https://www.youtube.com/watch?v=ynyAl7jdmvA" },
+            { title: "누구나 아는 비밀 (W. IU)", artist: "언니네 이발관", img: "https://image.bugsm.co.kr/album/images/1200/200972/20097233.jpg", url: "https://www.youtube.com/watch?v=eHS8i5k_d_0" },
+            { title: "결정 (F. IU)", artist: "형돈이와 대준이", img: "https://image.bugsm.co.kr/album/images/1200/200566/20056602.jpg", url: "https://www.youtube.com/watch?v=kREkJ8rGkNk" },
+            { title: "언제쯤이면 (D. IU)", artist: "윤현상", img: "https://image.bugsm.co.kr/album/images/1200/4605/460549.jpg", url: "https://www.youtube.com/watch?v=o6HFiVaK15I" },
+            { title: "노래 불러줘요 (F. IU)", artist: "god", img: "https://image.bugsm.co.kr/album/images/1200/4378/437861.jpg", url: "https://www.youtube.com/watch?v=VdXzDTi-Yd0" },
+            { title: "Like You (F. IU)", artist: "원티드", img: "https://image.bugsm.co.kr/album/images/1200/3181/318115.jpg", url: "https://www.youtube.com/watch?v=wBa6hIgnN9k" },
+            { title: "247 (F. IU)", artist: "세 개의 시선", img: "https://image.bugsm.co.kr/album/images/1200/1973/197344.jpg", url: "https://www.youtube.com/watch?v=pWXW5t-pp-U" },
+            { title: "희망사항 (F. IU)", artist: "마이티 마우스", img: "https://image.bugsm.co.kr/album/images/1200/1945/194502.jpg", url: "https://www.youtube.com/watch?v=kBcPz9DApho" },
+            { title: "월화수목 금토일 (F. IU)", artist: "수호(SUHO)", img: "https://image.bugsm.co.kr/album/images/1200/1917/191743.jpg", url: "https://www.youtube.com/watch?v=V7surNtTw-c" },
+            { title: "Suga Luv (F. IU)", artist: "비즈니즈", img: "https://image.bugsm.co.kr/album/images/1200/1904/190444.jpg", url: "https://www.youtube.com/watch?v=PXDpcS3hmh4" },
+            { title: "내 꿈은 파티시엘", artist: "아이유(IU)", img: "https://i.ytimg.com/vi/bgQIzPnPI88/maxresdefault.jpg", url: "https://www.youtube.com/watch?v=bgQIzPnPI88" },
+            { title: "Dreaming", artist: "아이유(IU)", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRki8fPRW_iY9IDQ0KUjMKiUFgj5o_r35PQk57fTLJ1vfLlIIDS0_qG5uCM&s=10", url: "https://www.youtube.com/watch?v=iXTDL1pss9c" },
+            { title: "Alicia", artist: "아이유(IU)", img: "https://img.khan.co.kr/news/2011/02/01/20110201.01500199950036.02L.jpg", url: "https://www.youtube.com/watch?v=z1w7Y7ewILk" },
+            { title: "바람의 멜로디", artist: "아이유(IU)", img: "https://cdn.maxmovie.com/news/photo/202501/441014_1_500.jpg", url: "https://www.youtube.com/watch?v=5Q1YCQ6inV0" },
+            { title: "버스를 잡자", artist: "아이유(IU)", img: "https://mblogthumb-phinf.pstatic.net/20110816_33/paranzui_1313489557298Nix6s_JPEG/00.jpg?type=w420", url: "https://www.youtube.com/watch?v=Wg2geX7KcEU" },
+            { title: "바다가 기억하는 얘기", artist: "아이유(IU)", img: "https://i0.wp.com/iutsc.com/wp-content/uploads/2024/01/2012-Memories-of-the-Sea-KOR.png?fit=1500%2C1500&ssl=1", url: "https://www.youtube.com/watch?v=PSHyPXLjQUY" },
+            { title: "유애나 송", artist: "아이유(IU)", img: "https://mblogthumb-phinf.pstatic.net/MjAxOTEyMDdfMTk5/MDAxNTc1NjQ3MzMwOTM4.9qSUt_wMEyQeutBeok9HqfMh31RyJ8qMTokuW6GrYQIg.v0eGtpvbzFA2muABOBFFYLcw1wYknRef2xRiFjSJXXEg.JPEG.hsg05069/IMG_6464.jpg?type=w800", url: "https://www.youtube.com/watch?v=_KXGC-SEmTw" },
+            { title: "아트레이아", artist: "아이유(IU)", img: "https://i1.sndcdn.com/artworks-000036184006-763otr-t500x500.jpg", url: "https://www.youtube.com/watch?v=Xsp5vgo9FxU" },
+            { title: "아빠를 부탁해", artist: "아이유(IU)", img: "https://cdn.gukjenews.com/news/photo/201503/222554_112104_2953.png", url: "https://www.youtube.com/watch?v=uz3MVUisql4" },
+            { title: "친구야 친구", artist: "아이유(IU)", img: "https://i1.sndcdn.com/artworks-000183867113-jpwimc-t500x500.jpg", url: "https://www.youtube.com/watch?v=epLg_SPEF0A" },
+            { title: "천년의 신곡", artist: "아이유(IU)", img: "https://mblogthumb-phinf.pstatic.net/MjAyMTA2MjZfMTA4/MDAxNjI0NzA4MTQ3OTk0.Bwp1kzvpy0goJBfVIDLUDLIcQE4tKmHBvAreX-dreUYg.KCD5146-4RvhP6aHM3W9FBM7mjmgg0Y3stNj1WJ0ZN0g.JPEG.racheladams/IMG_8445.JPG?type=w800", url: "https://www.youtube.com/watch?v=i-Im-aOZqQE" },
+            { title: "잊어야 한다는 마음으로", artist: "아이유(IU)", img: "https://i1.sndcdn.com/artworks-zIDuxr9yFJogVe0D-zrH4PQ-t1080x1080.jpg", url: "https://www.youtube.com/watch?v=ZXmoJu81e6A" },
+            { title: "Happy Ending", artist: "아이유(IU)", img: "https://sports.hankooki.com/news/photo/201908/img_6440272_0.jpg", url: "https://youtu.be/DbaB26ncDAg?si=QTvnjWkalmYuVxYZ" }
+        ];
+
+        function pickRandomSong() {
+            const randomIndex = Math.floor(Math.random() * iuSongs.length);
+            const selectedSong = iuSongs[randomIndex];
+
+            document.getElementById('song-title').innerText = selectedSong.title;
+            document.getElementById('album-img').src = selectedSong.img;
+            document.getElementById('song-artist').innerText = selectedSong.artist;
+            // 유튜브 공식 주소(url)를 직접 매칭합니다.
+            document.getElementById('music-link').href = selectedSong.url;
+        }
+
+        // 초기 세팅
+        const today = new Date();
+        const days = ["일", "월", "화", "수", "목", "금", "토"];
+        document.getElementById('current-date').innerText = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일 (${days[today.getDay()]}요일)`;
+        
+        pickRandomSong();
+    </script>
+
+</body>
+</html>
